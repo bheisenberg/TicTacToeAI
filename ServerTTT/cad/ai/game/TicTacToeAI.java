@@ -34,15 +34,13 @@ public class TicTacToeAI extends AbstractAI {
     public Hashtable<String, Record> Memory = new Hashtable <String, Record>();
     public List<String> gameStates = new ArrayList<String>();
     private int verbose = 0;
-    
 
     public TicTacToeAI() {
 	game = null;
 	ReadInMemory();
 	ran = new Random();
+	
     }
-    
-
     
     public class Record {
     	private int Wins = 0;
