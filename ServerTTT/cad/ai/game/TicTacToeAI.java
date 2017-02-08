@@ -14,10 +14,13 @@ package cad.ai.game;
 import java.util.Random;
 import java.util.Set;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.io.BufferedReader;
 
 /***********************************************************
  * The AI system for a TicTacToeGame.
@@ -30,10 +33,12 @@ public class TicTacToeAI extends AbstractAI {
     Random ran;
     public Hashtable<String, Record> Memory = new Hashtable <String, Record>();
     public List<String> gameStates = new ArrayList<String>();
+    private int verbose = 0;
     
 
     public TicTacToeAI() {
 	game = null;
+	ReadInMemory();
 	ran = new Random();
     }
     
@@ -77,17 +82,42 @@ public class TicTacToeAI extends AbstractAI {
 	game = (TicTacToeGame) g;
     }
     
+    public void ReadInMemory() {
+    	System.out.println("remembering");
+    	try (BufferedReader in = new BufferedReader(new FileReader("Memory.txt"))) {
+    		String line;
+    		while ((line = in.readLine()) != null) {
+    			LineToMemory(line);
+    		}
+    	} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
 
+    public void LineToMemory (String line) {
+    	Record record = new Record();
+    	String[] split = line.split(" ");
+    	String state = split[0];
+    	record.Wins = Integer.parseInt(split[1]);
+    	record.Losses = Integer.parseInt(split[2]);
+    	record.Ties = Integer.parseInt(split[3]);
+    	Memory.put(state, record);
+    	if (verbose > 1) System.out.println("Added state "+state+ " to memory");
+    }
     
     public void AddGameToMemory (List<String> gameStates, Hashtable<String, Record> tempMemory, String result) {
     	for(int i=0; i < gameStates.size(); i++) {
     		String state = gameStates.get(i);
 	    	if(!tempMemory.containsKey(state)) {
 	    		tempMemory.put(state, new Record());
-	    		System.out.println("Created new entry for state " +state);
+	    		if(verbose > 1)System.out.println("Created new entry for state " +state);
 	    	}
 		    tempMemory.replace(state, AddToRecord(tempMemory.get(state), result));
-		    System.out.println("State " +state+ " record is now: W: " +tempMemory.get(state).Wins+ " L: " +tempMemory.get(state).Losses+ " T: " +tempMemory.get(state).Ties);
+		    if(verbose > 1) System.out.println("State " +state+ " record is now: W: " +tempMemory.get(state).Wins+ " L: " +tempMemory.get(state).Losses+ " T: " +tempMemory.get(state).Ties);
 	    }
     	Memory = tempMemory;
     }
@@ -130,14 +160,14 @@ public class TicTacToeAI extends AbstractAI {
     
     public String getResultValue (int intresult) {
     	if(intresult == game.getPlayer()) {
-    		System.out.println("AI: I won!");
+    		if(verbose > 0) System.out.println("AI: I won!");
     		return "W";
     	} else {
     		if(intresult == 2) {
-        		System.out.println("AI: I tied.");
+        		if(verbose > 0) System.out.println("AI: I tied.");
     			return "T";
     		} else {
-        		System.out.println("AI: I lost.");
+        		if(verbose > 0) System.out.println("AI: I lost.");
     			return "L";
     		}
     	}
@@ -203,9 +233,10 @@ public class TicTacToeAI extends AbstractAI {
 	// about this particular game.
     //System.out.println(game.getState(true));
     	//AddStates(gameStates, dict, )
-    	System.out.println("Player: "+game.getPlayer());
+    	if(verbose > 1) System.out.println("Player: "+game.getPlayer());
     	//System.out.println("Result: "+getResultValue(ResultToInt(result)));
     	AddGameToMemory(gameStates, Memory, getResultValue(ResultToInt(result)));
+    	gameStates.clear();
     	
     	
 	game = null;  // No longer playing a game though.
