@@ -33,7 +33,7 @@ public class TicTacToeAI extends AbstractAI {
     Random ran;
     public Hashtable<String, Record> Memory = new Hashtable <String, Record>();
     public List<String> gameStates = new ArrayList<String>();
-    private int verbose = 0;
+    private int verbose = 2;
 
     public TicTacToeAI() {
 	game = null;
@@ -60,6 +60,26 @@ public class TicTacToeAI extends AbstractAI {
     	}
     }
     
+    private int BestMove (String state, char symbol) {
+    	int bestMove = 0;
+    	int bestRecord = 0;
+    	char [] stateArray = state.toCharArray();
+    		for (int i=0; i < stateArray.length; i++) {
+    			if(stateArray[i] == '0') {
+    				char [] tempStateArray = stateArray.clone();
+    				tempStateArray[i] = symbol;
+    				String tempState = new String(tempStateArray);
+    				int score = Memory.get(tempState).Wins;
+    				if (score > bestRecord) {
+    					bestRecord = score;
+    					bestMove = i;
+    					System.out.println("Potential best move: "+tempState+" has a score of " +score);
+    				}
+    			}
+    		}
+    	return bestMove;
+    }
+    
     public Record AddToRecord(Record record, String result) {
     	switch (result) {
     	case "W":
@@ -77,11 +97,11 @@ public class TicTacToeAI extends AbstractAI {
     
 
     public void attachGame(Game g) {
-	game = (TicTacToeGame) g;
+    	game = (TicTacToeGame) g;
     }
     
     public void ReadInMemory() {
-    	System.out.println("remembering");
+    	System.out.println("Remembering...");
     	try (BufferedReader in = new BufferedReader(new FileReader("Memory.txt"))) {
     		String line;
     		while ((line = in.readLine()) != null) {
@@ -104,7 +124,7 @@ public class TicTacToeAI extends AbstractAI {
     	record.Losses = Integer.parseInt(split[2]);
     	record.Ties = Integer.parseInt(split[3]);
     	Memory.put(state, record);
-    	if (verbose > 1) System.out.println("Added state "+state+ " to memory");
+    	if (verbose > 2) System.out.println("Added state "+state+ " to memory");
     }
     
     public void AddGameToMemory (List<String> gameStates, Hashtable<String, Record> tempMemory, String result) {
@@ -156,6 +176,10 @@ public class TicTacToeAI extends AbstractAI {
     	return 3;
     }
     
+    public char PlayerToSymbol (int player) {
+    	return player == 0 ? 'X' : 'O';
+    }
+    
     public String getResultValue (int intresult) {
     	if(intresult == game.getPlayer()) {
     		if(verbose > 0) System.out.println("AI: I won!");
@@ -196,7 +220,9 @@ public class TicTacToeAI extends AbstractAI {
 	//System.out.println("AI: "+getBoardState(board));
 	gameStates.add(boardState);
 	
-	System.out.println(gameStates);
+	if(verbose > 0) System.out.println("States: "+gameStates);
+	System.out.println("I am "+PlayerToSymbol(game.getPlayer()));
+	System.out.println("Best move: "+BestMove(boardState, PlayerToSymbol(game.getPlayer())));
 
 	// First see how many open slots there are
 	int openSlots = 0;
@@ -231,7 +257,6 @@ public class TicTacToeAI extends AbstractAI {
 	// about this particular game.
     //System.out.println(game.getState(true));
     	//AddStates(gameStates, dict, )
-    	if(verbose > 1) System.out.println("Player: "+game.getPlayer());
     	//System.out.println("Result: "+getResultValue(ResultToInt(result)));
     	AddGameToMemory(gameStates, Memory, getResultValue(ResultToInt(result)));
     	gameStates.clear();
